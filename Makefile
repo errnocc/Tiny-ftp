@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS= -c -Wall
-LDFLAGS=-lm
+LDFLAGS=-lm -g
 SOURCES=server.c handles.c
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=ftp

@@ -1,4 +1,6 @@
 #include "common.h"
+#include <netinet/in.h>
+#include <unistd.h>
 #ifndef sendfile
 #define BUF_SIZE 8192
 ssize_t sendfile(int out_fd, int in_fd, off_t * offset, size_t count )
@@ -125,20 +127,30 @@ void ftp_pass(Command *cmd, State *state)
 void ftp_pasv(Command *cmd, State *state)
 {
   if(state->logged_in){
-    int ip[4];
+    int ip[4] = {0 ,0, 0, 0};
+	int i, temp = 0;
     char buff[255];
     char *response = "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\n";
+	struct sockaddr_in localaddr;
+	socklen_t len = sizeof(localaddr);
     Port *port = malloc(sizeof(Port));
     gen_port(port);
-    getip(state->connection,ip);
-
+	//get ip
+	getsockname(state->connection,(struct sockaddr*)&localaddr,&len);
+	
+	temp = (int)localaddr.sin_addr.s_addr;
+	ip[0] = (temp & 0xff000000) >> 24;
+	ip[1] = (temp & 0x00ff0000) >> 16;
+	ip[2] = (temp & 0x0000ff00) >> 8;
+	ip[3] = (temp & 0x000000ff);  
+	
     /* Close previous passive socket? */
     close(state->sock_pasv);
 
     /* Start listening here, but don't accept the connection */
     state->sock_pasv = create_socket((256*port->p1)+port->p2);
     printf("port: %d\n",256*port->p1+port->p2);
-    sprintf(buff,response,ip[0],ip[1],ip[2],ip[3],port->p1,port->p2);
+    sprintf(buff,response,ip[3],ip[2],ip[1],ip[0],port->p1,port->p2);
     state->message = buff;
     state->mode = SERVER;
     puts(state->message);

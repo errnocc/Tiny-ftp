@@ -118,41 +118,11 @@ int accept_connection(int socket)
   return accept(socket,(struct sockaddr*) &client_address,&addrlen);
 }
 
-/**
- * Get ip where client connected to
- * @param sock Commander socket connection
- * @param ip Result ip array (length must be 4 or greater)
- * result IP array e.g. {127,0,0,1}
- */
-void getip(int sock, int *ip)
-{
-  socklen_t addr_size = sizeof(struct sockaddr_in);
-  struct sockaddr_in addr;
-  getsockname(sock, (struct sockaddr *)&addr, &addr_size);
- 
-  char* host = inet_ntoa(addr.sin_addr);
-  sscanf(host,"%d.%d.%d.%d",&ip[0],&ip[1],&ip[2],&ip[3]);
-}
-
-/**
- * Lookup enum value of string
- * @param cmd Command string 
- * @return Enum index if command found otherwise -1
- */
-
 int lookup_cmd(char *cmd){
   const int cmdlist_count = sizeof(cmdlist_str)/sizeof(char *);
   return lookup(cmd, cmdlist_str, cmdlist_count);
 }
 
-/**
- * General lookup for string arrays
- * It is suitable for smaller arrays, for bigger ones trie is better
- * data structure for instance.
- * @param needle String to lookup
- * @param haystack Strign array
- * @param count Size of haystack
- */
 int lookup(char *needle, const char **haystack, int count)
 {
   int i;
