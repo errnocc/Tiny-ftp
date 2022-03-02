@@ -1,13 +1,17 @@
 #include "common.h"
+#include <unistd.h>
 /** 
  * Sets up server and handles incoming connections
  * @param port Server port
  */
+
+int lookup(char *needle, const char **haystack, int count);
+
 void server(int port)
 {
   int sock = create_socket(port);
   struct sockaddr_in client_address;
-  int len = sizeof(client_address);
+  socklen_t len = sizeof(client_address);
   int connection, pid, bytes_read;
 
   while(1){
@@ -17,6 +21,7 @@ void server(int port)
     State *state = malloc(sizeof(State));
     pid = fork();
     
+    signal(SIGCHLD,my_wait);
     memset(buffer,0,BSIZE);
 
     if(pid<0){
@@ -40,7 +45,6 @@ void server(int port)
       /* Read commands from client */
       while (bytes_read = read(connection,buffer,BSIZE)){
         
-        signal(SIGCHLD,my_wait);
 
         if(!(bytes_read>BSIZE)){
           /* TODO: output this to log */
@@ -61,6 +65,8 @@ void server(int port)
         }
       }
       printf("Client disconnected.\n");
+	  free(cmd);
+	  free(state);
       exit(0);
     }else{
       printf("closing... :(\n");
@@ -112,7 +118,7 @@ int create_socket(int port)
  */
 int accept_connection(int socket)
 {
-  int addrlen = 0;
+  socklen_t addrlen = 0;
   struct sockaddr_in client_address;
   addrlen = sizeof(client_address);
   return accept(socket,(struct sockaddr*) &client_address,&addrlen);
